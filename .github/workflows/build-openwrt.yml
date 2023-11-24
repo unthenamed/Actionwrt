@@ -10,18 +10,12 @@
 
 name: Build OpenWrt
 
-on:
-  repository_dispatch:
-  workflow_dispatch:
-    inputs:
-      ssh:
-        description: 'SSH connection to Actions'
-        required: false
-        default: 'v19.07.9'
+on: [push]
 
 env:
   REPO_URL: https://git.openwrt.org/openwrt/openwrt.git
   REPO_COUT: v19.07.9
+  FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
@@ -64,6 +58,7 @@ jobs:
 
     - name: Load custom feeds
       run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
@@ -87,15 +82,14 @@ jobs:
       id: package
       run: |
         cd openwrt
-        make defconfig
-        make download world -j16 V=sc
+        make download $(nproc)
 
     - name: Compile the firmware
       id: compile
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make -j8 V=s
+        make -j8 $(nproc)
         echo "::set-output name=status::success"
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
