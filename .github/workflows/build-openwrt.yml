@@ -21,7 +21,6 @@ on:
 
 env:
   REPO_URL: https://git.openwrt.org/openwrt/openwrt.git
-  REPO_BRANCH: master
   REPO_COUT: v19.07.9
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1.sh
@@ -64,7 +63,6 @@ jobs:
 
     - name: Load custom feeds
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
@@ -96,7 +94,7 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make -j8 
+        make -j8 V=s
         echo "::set-output name=status::success"
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
