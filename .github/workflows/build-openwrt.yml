@@ -88,7 +88,7 @@ jobs:
       run: |
         cd openwrt
         make defconfig
-        make download world -j8
+        make download world -j16 V=sc
 
     - name: Compile the firmware
       id: compile
